@@ -38,6 +38,17 @@
 
 #include "oculus_sdk4.h"
 
+
+#include <openvr.h>
+	vr::IVRSystem *m_pHMD;
+/*	FramebufferDesc leftEyeDesc;
+	FramebufferDesc rightEyeDesc;*/
+	vr::TrackedDevicePose_t m_rTrackedDevicePose[ vr::k_unMaxTrackedDeviceCount ];
+	uint32_t m_nRenderWidth;
+	uint32_t m_nRenderHeight;
+#pragma comment(lib, "openvr_api.lib")
+
+
 #if defined(HYDRA)
 #include <sixense.h>
 #pragma comment(lib, "sixense.lib")
@@ -392,6 +403,7 @@ enum StereoMode { ST_NONE=0,
                   ST_INTERLACED,
                   ST_SIDEBYSIDE,
                   ST_QUADBUFFER,
+                  ST_OPENVR,
                   ST_OCULUS,
                   ST_ANAGLYPH,
                   ST_SPHERICAL,
@@ -873,6 +885,12 @@ class Camera : public KeyFrame {
          setUniforms(1.0, 0.0, 1.0, 0.0, +speed*polarity);
          glRects(-1,-1,1,1);
          } break;
+       case ST_OPENVR: {  // left | right
+         setUniforms(2.0, +1.0, 1.0, 0.0, -speed);
+         glRectf(-1,-1,0,1);  // draw left half of screen
+         setUniforms(2.0, -1.0, 1.0, 0.0, +speed);
+         glRectf(0,-1,1,1);  // draw right half of screen
+         } break;
        case ST_XEYED: {  // right | left
          setUniforms(2.0, +1.0, 1.0, 0.0, +speed);
          glRectf(-1,-1,0,1);  // draw left half of screen
@@ -1345,7 +1363,7 @@ bool setupShaders2(void) {
   bool ok = (effects.compile(defines, vertex, fragment) != 0);
 
 #if 0
-  if (stereoMode == ST_OCULUS) {
+  if (stereoMode == ST_OCULUS || stereoMode == ST_OPENVR) {
     // Do not load fxaa / dof for oculus rendering.
     // We only do aberration pre-compensation in post for oculus.
     return ok;
@@ -1928,7 +1946,7 @@ void initTwBar(enum StereoMode stereoMode) {
 
   bar = TwNewBar("boxplorer");
 
-  if (stereoMode == ST_OCULUS) {
+  if (stereoMode == ST_OCULUS || stereoMode == ST_OPENVR) {
     // Position HUD center for left eye.
     // TODO: make float
     char pos[100];
@@ -2053,6 +2071,8 @@ int main(int argc, char **argv) {
       stereoMode = ST_SIDEBYSIDE;
     } else if (!strcmp(argv[argc-1], "--quadbuffer")) {
       stereoMode = ST_QUADBUFFER;
+    } else if (!strcmp(argv[argc-1], "--openvr")) {
+      stereoMode = ST_OPENVR;
     } else if (!strcmp(argv[argc-1], "--anaglyph")) {
       stereoMode = ST_ANAGLYPH;
       defines.append("#define ST_ANAGLYPH\n");
@@ -2174,6 +2194,21 @@ int main(int argc, char **argv) {
   }
 #endif
 
+
+  if (stereoMode == ST_OPENVR) {
+	// Loading the SteamVR Runtime
+	vr::EVRInitError eError = vr::VRInitError_None;
+	m_pHMD = vr::VR_Init( &eError, vr::VRApplication_Scene );
+
+	if ( eError != vr::VRInitError_None ) {
+		die("OpenVR initialization failed: %s\n", vr::VR_GetVRInitErrorAsEnglishDescription( eError ));
+	}
+
+	m_pHMD->GetRecommendedRenderTargetSize( &m_nRenderWidth, &m_nRenderHeight );
+  printf("OpenVR %dx%d\n", m_nRenderWidth, m_nRenderHeight);
+  }
+
+
 #if defined(HYDRA)
   if (sixenseInit() != SIXENSE_SUCCESS) {
     die("sixenseInit() fail!");
@@ -2219,6 +2254,16 @@ int main(int argc, char **argv) {
     //config.width = 1280; config.height = 800;  // DK1
     //config.fov_x = 110; config.fov_y = 94.0;  // DK1
     config.width = 1920; config.height = 1080;
+    config.fov_x = 100; config.fov_y = 100.0;
+    fixedFov = true;
+    // Enable multipass but not dof and fxaa.
+    config.backbuffer = 1;
+    config.enable_fxaa = 0;
+    config.enable_dof = 0;
+  }
+  if (stereoMode == ST_OPENVR) {
+    // Fix resolution for optimal performance.
+    config.width = m_nRenderWidth; config.height = m_nRenderHeight;
     config.fov_x = 100; config.fov_y = 100.0;
     fixedFov = true;
     // Enable multipass but not dof and fxaa.
@@ -2453,6 +2498,25 @@ int main(int argc, char **argv) {
         }
       }
 #endif
+      if (stereoMode == ST_OPENVR) {
+      	vr::VRCompositor()->WaitGetPoses(m_rTrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0 );
+       	if ( m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid )
+      	{
+// right-handed system
+// +y is up
+// +x is to the right
+// -z is going away from you
+// Distance unit is  meters
+//	float m[3][4];
+// ToDo
+view_q[0]=m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsoluteTracking.m[0][0];
+view_q[1]=m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsoluteTracking.m[0][1];
+view_q[2]=m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsoluteTracking.m[0][2];
+view_q[3]=m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsoluteTracking.m[0][3];
+          camera.mixSensorOrientation(view_q);
+            mixedInOculus = true;
+      	}
+     }
 
       if (!config.disable_de) {
         // Try get a DE for current position.
@@ -2815,6 +2879,34 @@ int main(int argc, char **argv) {
     }
 
     CHECK_ERROR;
+    
+    
+    if (stereoMode == ST_OPENVR) {
+      vr::VRTextureBounds_t boundsLeft, boundsRight;
+      boundsLeft ={ 0, 0,.5, 1};
+      boundsRight={.5, 0, 1, 1};
+    	vr::Texture_t leftEyeTexture = {(void*)(uintptr_t)mainFbo[(frameno&1)/*^1*/], vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+    	vr::EVRCompositorError err;
+      err=vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture, &boundsLeft/*,0,vr::Submit_GlRenderBuffer*/);
+      if(err) printf("err=%i ", err);
+/*      #define BUFFER_SIZE 4096
+      char buffer[BUFFER_SIZE];
+      vr::VRCompositor()->GetLastError(buffer, BUFFER_SIZE);
+      printf(buffer);*/
+//  		vr::Texture_t rightEyeTexture = {(void*)(uintptr_t)mainFbo[0], vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+    	err=vr::VRCompositor()->Submit(vr::Eye_Right, /*&rightEyeTexture*/&leftEyeTexture, &boundsRight);
+      if(err) printf("err=%i ", err);
+    	if ( false/*m_bVblank && m_bGlFinishHack*/ )
+    	{
+    		//$ HACKHACK. From gpuview profiling, it looks like there is a bug where two renders and a present
+    		// happen right before and after the vsync causing all kinds of jittering issues. This glFinish()
+    		// appears to clear that up. Temporary fix while I try to get nvidia to investigate this problem.
+    		// 1/29/2014 mikesart
+    		// might still be needed: https://github.com/ValveSoftware/openvr/issues/460#issuecomment-292937035
+    		glFinish();
+    	}
+    }
+
 
     SDL_GL_SwapWindow(window.window());
     frameno++;
@@ -3387,6 +3479,9 @@ int main(int argc, char **argv) {
     ReleaseOculusSDK();
   }
 #endif
+  if (stereoMode == ST_OPENVR) {
+    vr::VR_Shutdown();
+  }
 
 #if defined(HYDRA)
   sixenseExit();
