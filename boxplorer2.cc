@@ -2891,7 +2891,7 @@ view_q[3]=m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsolute
       vr::VRTextureBounds_t boundsLeft, boundsRight;
       boundsLeft ={ 0, 0,.5, 1};
       boundsRight={.5, 0, 1, 1};
-    	vr::Texture_t leftEyeTexture = {(void*)(uintptr_t)mainTex[(frameno&1)/*^1*/], vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+    	vr::Texture_t leftEyeTexture = {(void*)(uintptr_t)mainTex[(frameno&1)^1], vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
     	vr::EVRCompositorError err;
       err=vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture, &boundsLeft/*, vr::Submit_GlRenderBuffer*/);
       if(err) printf("err=%i ", err);
@@ -2902,7 +2902,7 @@ view_q[3]=m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsolute
 //  		vr::Texture_t rightEyeTexture = {(void*)(uintptr_t)mainFbo[0], vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
     	err=vr::VRCompositor()->Submit(vr::Eye_Right, /*&rightEyeTexture*/&leftEyeTexture, &boundsRight);
       if(err) printf("err=%i ", err);
-    	if ( false/*m_bVblank && m_bGlFinishHack*/ )
+    	if ( /*false*/true/*m_bVblank && m_bGlFinishHack*/ )
     	{
     		//$ HACKHACK. From gpuview profiling, it looks like there is a bug where two renders and a present
     		// happen right before and after the vsync causing all kinds of jittering issues. This glFinish()
