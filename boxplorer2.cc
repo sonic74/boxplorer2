@@ -1644,9 +1644,15 @@ bool initGraphics(bool fullscreenToggle, int w, int h, int frameno = 0) {
       // 32F gives best fidelity for the pathtracer and radiance shaders that
       // use accumulation.
 #if defined(GL_RGBA32F)
+if(stereoMode == ST_OPENVR) {
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+                   config.width, config.height,
+                   0, GL_BGRA, GL_FLOAT, NULL);
+} else {
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
                    config.width, config.height,
                    0, GL_BGRA, GL_FLOAT, NULL);
+       }
 #else
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
                    config.width, config.height,
@@ -2885,9 +2891,9 @@ view_q[3]=m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsolute
       vr::VRTextureBounds_t boundsLeft, boundsRight;
       boundsLeft ={ 0, 0,.5, 1};
       boundsRight={.5, 0, 1, 1};
-    	vr::Texture_t leftEyeTexture = {(void*)(uintptr_t)mainFbo[(frameno&1)/*^1*/], vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+    	vr::Texture_t leftEyeTexture = {(void*)(uintptr_t)mainTex[(frameno&1)/*^1*/], vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
     	vr::EVRCompositorError err;
-      err=vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture, &boundsLeft/*,0,vr::Submit_GlRenderBuffer*/);
+      err=vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture, &boundsLeft/*, vr::Submit_GlRenderBuffer*/);
       if(err) printf("err=%i ", err);
 /*      #define BUFFER_SIZE 4096
       char buffer[BUFFER_SIZE];
