@@ -2294,7 +2294,7 @@ int main(int argc, char **argv) {
       printf(__FUNCTION__ " : JoystickName '%s'\n",
              name.c_str());
       // SDL_main : JoystickName 'Controller (Xbox One For Windows)'
-      if (name.find("X") != string::npos) break;  // got it
+      if (name.find("X") != string::npos) break;  // got something
       SDL_JoystickClose(joystick);
     }
   }
