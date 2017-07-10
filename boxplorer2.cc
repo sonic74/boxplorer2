@@ -38,17 +38,6 @@
 
 #include "oculus_sdk4.h"
 
-
-#include <openvr.h>
-	vr::IVRSystem *m_pHMD;
-/*	FramebufferDesc leftEyeDesc;
-	FramebufferDesc rightEyeDesc;*/
-	vr::TrackedDevicePose_t m_rTrackedDevicePose[ vr::k_unMaxTrackedDeviceCount ];
-	uint32_t m_nRenderWidth;
-	uint32_t m_nRenderHeight;
-#pragma comment(lib, "openvr_api.lib")
-
-
 #if defined(HYDRA)
 #include <sixense.h>
 #pragma comment(lib, "sixense.lib")
@@ -56,6 +45,18 @@
 #endif
 
 #endif  // _WIN32
+
+
+#if defined(__APPLE__)
+#define nullptr NULL
+#endif
+#include <openvr.h>
+  vr::IVRSystem *m_pHMD;
+  vr::TrackedDevicePose_t m_rTrackedDevicePose[ vr::k_unMaxTrackedDeviceCount ];
+  uint32_t m_nRenderWidth;
+  uint32_t m_nRenderHeight;
+#pragma comment(lib, "openvr_api.lib")
+
 
 #include <vector>
 #include <string>
@@ -2889,9 +2890,8 @@ view_q[3]=m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsolute
     
     
     if (stereoMode == ST_OPENVR) {
-      vr::VRTextureBounds_t boundsLeft, boundsRight;
-      boundsLeft ={ 0, 0,.5, 1};
-      boundsRight={.5, 0, 1, 1};
+      vr::VRTextureBounds_t boundsLeft ={ 0, 0,.5, 1}, 
+                            boundsRight={.5, 0, 1, 1};
     	vr::Texture_t leftEyeTexture = {(void*)(uintptr_t)mainTex[(frameno&1)^1], vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
     	vr::EVRCompositorError err;
       err=vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture, &boundsLeft/*, vr::Submit_GlRenderBuffer*/);

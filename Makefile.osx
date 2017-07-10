@@ -2,10 +2,10 @@
 #
 all: boxplorer2 edit-cfg glsl sdl2-test
 
-CFLAGS=-O2 -IAntTweakBar/include -IAntTweakBar/src -Iinclude -DTW_NO_LIB_PRAGMA -DTW_STATIC -D_MACOSX -ObjC++ -D__PLACEMENT_NEW_INLINE -I/System/Library/Frameworks/OpenGL.framework/Headers/ -I/System/Library/Frameworks/AppKit.framework/Headers/ -I/Library/Frameworks/SDL2.framework/Headers/
+CFLAGS=-O2 -IAntTweakBar/include -IAntTweakBar/src -Iinclude -DTW_NO_LIB_PRAGMA -DTW_STATIC -D_MACOSX -ObjC++ -D__PLACEMENT_NEW_INLINE -I/System/Library/Frameworks/OpenGL.framework/Headers/ -I/System/Library/Frameworks/AppKit.framework/Headers/ -I/Library/Frameworks/SDL2.framework/Headers/ -I/Library/Frameworks/OpenVR.framework/Headers
 
 LDFLAGS=-F/Library/Frameworks/ -framework OpenGL -framework Cocoa \
-	-framework SDL2
+	-framework SDL2 -framework OpenVR
 
 TW_OBJS=TwBar.o TwFonts.o LoadOGL.o TwMgr.o TwEventSDL.o TwPrecomp.o TwColors.o TwOpenGL.o TwEventSDL12.o TwEventSDL13.o TwEventSDL20.o TwOpenGLCore.o LoadOGLCore.o
 
