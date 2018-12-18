@@ -1541,7 +1541,7 @@ bool initGraphics(bool fullscreenToggle, int w, int h, int frameno = 0) {
 
       glGenFramebuffers(1, &de_fbo);
 
-      glActiveTexture(GL_TEXTURE0);
+      _glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, de_texture);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -1585,7 +1585,7 @@ bool initGraphics(bool fullscreenToggle, int w, int h, int frameno = 0) {
     // Load background image into texture.
 
     glGenTextures(1, &background_texture);
-    glActiveTexture(GL_TEXTURE0);
+    _glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, background_texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -1619,7 +1619,7 @@ bool initGraphics(bool fullscreenToggle, int w, int h, int frameno = 0) {
 
     for (size_t i = 0; i < ARRAYSIZE(mainFbo); ++i) {
       // Initialize depth texture
-      glActiveTexture(GL_TEXTURE0);
+      _glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, mainDepth[i]);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1634,7 +1634,7 @@ bool initGraphics(bool fullscreenToggle, int w, int h, int frameno = 0) {
       CHECK_ERROR;
 
       // Initialize color texture
-      glActiveTexture(GL_TEXTURE0);
+      _glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, mainTex[i]);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, clamp);
@@ -1691,7 +1691,7 @@ if(stereoMode == ST_OPENVR) {
       glGenTextures(ARRAYSIZE(blurTex), blurTex);
 
       for (size_t i = 0; i < ARRAYSIZE(blurTex); ++i) {
-        glActiveTexture(GL_TEXTURE0);
+        _glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, blurTex[i]);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1733,7 +1733,7 @@ if(stereoMode == ST_OPENVR) {
       glGenTextures(1, &scratchTex);
       glGenFramebuffers(1, &scratchFbo);
 
-      glActiveTexture(GL_TEXTURE0);
+      _glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, scratchTex);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1765,7 +1765,7 @@ if(stereoMode == ST_OPENVR) {
       glGenTextures(1, &fxaaTex);
       glGenFramebuffers(1, &fxaaFbo);
 
-      glActiveTexture(GL_TEXTURE0);
+      _glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, fxaaTex);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -2590,14 +2590,14 @@ view_q[3]=m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsolute
 
     // Set up input texture to fractal shader.
     if (background_texture) {
-      glActiveTexture(GL_TEXTURE0);
+      _glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, background_texture);
       glUniform1i(glGetUniformLocation(program, "iChannel0"), 0);
     }
 
     // Set up backbuffer as input.
     if (config.backbuffer) {
-      glActiveTexture(GL_TEXTURE1);
+      _glActiveTexture(GL_TEXTURE1);
       glBindTexture(GL_TEXTURE_2D, mainTex[(frameno&1)^1]);
       glUniform1i(glGetUniformLocation(program, "iBackbuffer"), 1);
       glUniform1i(glGetUniformLocation(program, "iBackbufferCount"),
@@ -2654,7 +2654,7 @@ view_q[3]=m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsolute
 
       if (!config.backbuffer) {
         glEnable(GL_TEXTURE_2D);
-        glActiveTexture(GL_TEXTURE0);
+        _glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, currentFrame);
         // Mipmap the frame.
         // TODO: not needed by default. Costly?
@@ -2664,7 +2664,7 @@ view_q[3]=m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsolute
       if (fxaa.ok() && config.enable_fxaa && camera.fxaa) {
         // We have a fxaa shader.
         // Compute and point currentFrame(s) at output.
-        glActiveTexture(GL_TEXTURE0);
+        _glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, currentFrame);
 
         glBindFramebuffer(GL_FRAMEBUFFER, fxaaFbo);
@@ -2694,16 +2694,16 @@ view_q[3]=m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsolute
           switch (i) {
             case 0: {
               // First input is current frame.
-              glActiveTexture(GL_TEXTURE0);
+              _glActiveTexture(GL_TEXTURE0);
               glBindTexture(GL_TEXTURE_2D, currentFrame);
             } break;
             default: {
               int odd = (i&1);
               if (odd) {
-                glActiveTexture(GL_TEXTURE0);
+                _glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, scratchTex);
               } else {
-                glActiveTexture(GL_TEXTURE0);
+                _glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, currentFrame);
               }
               writeLevel = (i+1)/2 - 1;
@@ -2716,7 +2716,7 @@ view_q[3]=m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsolute
                               ? scratchFbo  // scratch as output
                               : blurFbo[writeLevel]);  // target blur as output
 
-          glActiveTexture(GL_TEXTURE2);
+          _glActiveTexture(GL_TEXTURE2);
           glBindTexture(GL_TEXTURE_2D, mainDepth[frameno&1]);  // current depth
 
           GLuint dof_program = dof.program();
@@ -2748,21 +2748,21 @@ view_q[3]=m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsolute
       glEnable(GL_TEXTURE_2D);
 
       // Pass main render as texture 0
-      glActiveTexture(GL_TEXTURE0);
+      _glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, currentFrame);
       glUniform1i(glGetUniformLocation(final_program, "iTexture"), 0);
 
       // Pass main depth as texture 1
-      glActiveTexture(GL_TEXTURE1);
+      _glActiveTexture(GL_TEXTURE1);
       glBindTexture(GL_TEXTURE_2D, mainDepth[frameno&1]);
       glUniform1i(glGetUniformLocation(final_program, "iDepth"), 1);
 
       if (dof.ok() && camera.enable_dof && camera.aperture != 0) {
         // Pass blur textures as 2 and 3, if we computed them.
-        glActiveTexture(GL_TEXTURE2);
+        _glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, blurTex[0]);
         glUniform1i(glGetUniformLocation(final_program, "iBlur0"), 2);
-        glActiveTexture(GL_TEXTURE3);
+        _glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, blurTex[1]);
         glUniform1i(glGetUniformLocation(final_program, "iBlur1"), 3);
         glUniform1i(glGetUniformLocation(final_program, "enable_dof"), 1);
@@ -2800,13 +2800,13 @@ view_q[3]=m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsolute
       // Wtf? need to deactivate each texture unit; glDisable is not enough.
       // Otherwise, texturing messes with color drawn and keyframe select fails.
       glEnable(GL_TEXTURE_2D);
-      glActiveTexture(GL_TEXTURE0);
+      _glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, 0);
-      glActiveTexture(GL_TEXTURE1);
+      _glActiveTexture(GL_TEXTURE1);
       glBindTexture(GL_TEXTURE_2D, 0);
-      glActiveTexture(GL_TEXTURE2);
+      _glActiveTexture(GL_TEXTURE2);
       glBindTexture(GL_TEXTURE_2D, 0);
-      glActiveTexture(GL_TEXTURE3);
+      _glActiveTexture(GL_TEXTURE3);
       glBindTexture(GL_TEXTURE_2D, 0);
       //glDisable(GL_TEXTURE_2D);
 
